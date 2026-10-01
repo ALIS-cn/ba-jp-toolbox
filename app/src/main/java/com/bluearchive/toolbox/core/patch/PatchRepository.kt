@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch
+﻿package com.bluearchive.toolbox.core.patch
 
 import com.bluearchive.toolbox.core.log.LogCollector
 import com.bluearchive.toolbox.data.release.CafeResource
@@ -71,7 +71,9 @@ class PatchRepository(
 
         // 2. 下载
         onProgress(Progress(Step.Download, 0f, "下载 ${resource.assetName}（${formatMB(resource.sizeBytes)}）…"))
-        val zipFile = File(gameFs.stagingDir.parentFile, resource.assetName)
+        val zipFile = gameFs.stagingDir.parentFile!!.resolve(resource.assetName).canonicalFile.also {
+            if (!it.path.startsWith(gameFs.stagingDir.parentFile!!.canonicalPath)) throw SecurityException("非法文件名: ${resource.assetName}")
+        }
         val downloadOk = releaseRepo.downloadWithMirrors(resource.downloadUrl, zipFile) { downloaded, total ->
             val p = if (total > 0) (downloaded * 100f / total).coerceIn(0f, 100f) else 0f
             onProgress(Progress(Step.Download, p, "下载中… ${p.toInt()}%"))

@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.ui.home
+﻿package com.bluearchive.toolbox.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -254,7 +254,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.clickable { onOpenChangelog }) {
+                    Column(modifier = Modifier.clickable { onOpenChangelog() }) {
                         Text("版本", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
                             "v$versionName",
@@ -369,7 +369,8 @@ fun HomeScreen(
                         Spacer(Modifier.width(8.dp))
                         TextButton(onClick = {
                             // 保存到文件
-                            val file = File(context.getExternalFilesDir(null), "ba-toolbox-log.txt")
+                            val dir = context.getExternalFilesDir(null) ?: context.filesDir
+                            val file = File(dir, "ba-toolbox-log.txt")
                             file.writeText(logText)
                             showLogDialog = false
                         }) { Text("保存文件") }
@@ -514,3 +515,6 @@ private fun formatDate(iso: String): String =
     } catch (_: Exception) {
         iso
     }
+
+
+

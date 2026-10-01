@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.ui
+﻿package com.bluearchive.toolbox.ui
 
 import android.app.Application
 import android.content.Context
@@ -283,9 +283,9 @@ class ToolboxViewModel(app: Application) : AndroidViewModel(app) {
                     _patch.value = PatchUi.Running(progress)
                 }
                 _patch.value = PatchUi.Finished(result)
-            } catch (_: kotlinx.coroutines.CancellationException) {
+            } catch (e: Exception) {
                 _patch.value = PatchUi.Finished(
-                    PatchRepository.PatchResult(false, "已取消")
+                    PatchRepository.PatchResult(false, if (e is kotlinx.coroutines.CancellationException) "已取消" else e.message ?: "发生错误")
                 )
             }
         }

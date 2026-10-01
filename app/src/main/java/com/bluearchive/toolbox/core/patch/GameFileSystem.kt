@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch
+﻿package com.bluearchive.toolbox.core.patch
 
 import android.Manifest
 import android.content.Context
@@ -41,16 +41,12 @@ class GameFileSystem(
         val reason: String,
     )
 
-    fun candidates(): List<ChannelCandidate> {
+    suspend fun candidates(): List<ChannelCandidate> {
         val env = envProvider()
         val sdk = Build.VERSION.SDK_INT
         val shizukuOk = env?.shizukuAuthorized == true
         val storageOk = hasStoragePermission()
-        val safUri = try {
-            kotlinx.coroutines.runBlocking { prefs.safTreeUri() }
-        } catch (_: Exception) {
-            null
-        }
+        val safUri = prefs.safTreeUri()
 
         return buildList {
             add(
@@ -113,3 +109,4 @@ class GameFileSystem(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
         ) == PackageManager.PERMISSION_GRANTED
 }
+

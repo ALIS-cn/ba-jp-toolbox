@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.ui.about
+﻿package com.bluearchive.toolbox.ui.about
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +34,23 @@ private data class ChangelogEntry(
 )
 
 private val CHANGELOG = listOf(
+    ChangelogEntry(
+        version = "0.8.7",
+        date = "2026-10-02",
+        items = listOf(
+            "修复：下载取消后仍会尝试下一个镜像源，导致取消失效",
+            "修复：Shizuku 命令 stdout/stderr 顺序读取可能死锁，改为并行读取",
+            "修复：汉化/安装操作失败时界面卡住，现在会正确显示错误并复位",
+            "修复：Shizuku 授权请求无超时，服务异常时界面会一直等待",
+            "修复：下载完成时文件重命名失败导致后续校验出错",
+            "修复：解压 zip 时不响应取消操作",
+            "修复：还原原版时未提示手动关闭游戏",
+            "修复：SAF 通道创建目录失败时静默跳过导致文件丢失",
+            "修复：点击版本号不跳转更新日志",
+            "修复：Shizuku 安装器打开失败时直接崩溃",
+            "修复：PackageInstaller 会话异常时泄漏",
+        ),
+    ),
     ChangelogEntry(
         version = "0.8.6",
         date = "2026-10-01",

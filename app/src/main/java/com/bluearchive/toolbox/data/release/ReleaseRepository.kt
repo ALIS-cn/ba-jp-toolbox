@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.data.release
+﻿package com.bluearchive.toolbox.data.release
 
 import com.bluearchive.toolbox.core.log.LogCollector
 import com.bluearchive.toolbox.data.prefs.AppPreferences
@@ -123,6 +123,7 @@ class ReleaseRepository(
                 }
                 cafeResource ?: error(apiError ?: "所有镜像均失败")
             }.recoverCatching { error ->
+                if (error is kotlinx.coroutines.CancellationException) throw error
                 // 网络异常时：有缓存就降级用缓存，没有缓存才报错
                 val cachedJson = prefs.releaseJson()
                 if (cachedJson != null) {
@@ -290,10 +291,17 @@ class ReleaseRepository(
                         return@use
                     }
                     if (dest.exists()) dest.delete()
-                    partFile.renameTo(dest)
+                    if (!partFile.renameTo(dest)) {
+                        // rename 失败（跨卷/占用）时退回复制
+                        partFile.copyTo(dest, overwrite = true)
+                        partFile.delete()
+                    }
                     LogCollector.i("Download", "下载成功: ${dest.absolutePath} (${dest.length()} bytes)")
                     return@withContext Result.success(dest)
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                File(dest.absolutePath + ".part").delete()
+                throw e // 取消必须向上传播，不能降级到下一个镜像
             } catch (e: Exception) {
                 lastError = "源${index + 1} ${e.javaClass.simpleName}: ${e.message}"
                 LogCollector.e("Download", lastError!!, e)
@@ -472,3 +480,7 @@ class MirrorProber(
         private const val CACHE_TTL_MS = 5 * 60 * 1000L // 5 分钟
     }
 }
+
+
+
+

@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch.channel
+﻿package com.bluearchive.toolbox.core.patch.channel
 
 import android.content.Context
 import android.net.Uri
@@ -84,7 +84,7 @@ class SafChannel(
         if (src.isDirectory) {
             src.listFiles()?.forEach { child ->
                 if (child.isDirectory) {
-                    val sub = dstDir.findFile(child.name) ?: dstDir.createDirectory(child.name)
+                    val sub = dstDir.findFile(child.name) ?: dstDir.createDirectory(child.name) ?: throw java.io.IOException("无法创建目录: ${child.name}")
                     if (sub != null) copyRecursive(child, sub)
                 } else {
                     val existing = dstDir.findFile(child.name)
@@ -99,3 +99,4 @@ class SafChannel(
         }
     }
 }
+

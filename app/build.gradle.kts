@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -13,8 +13,8 @@ android {
         applicationId = "com.bluearchive.toolbox"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
-        versionName = "0.8.6"
+        versionCode = 27
+        versionName = "0.8.7"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -76,3 +76,4 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
 }
+

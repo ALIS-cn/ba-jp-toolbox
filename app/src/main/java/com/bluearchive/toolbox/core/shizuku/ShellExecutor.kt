@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.shizuku
+﻿package com.bluearchive.toolbox.core.shizuku
 
 import com.bluearchive.toolbox.core.log.LogCollector
 import android.content.pm.PackageManager
@@ -55,16 +55,23 @@ object ShellExecutor {
                     LogCollector.e("Shell", "创建进程失败")
                     return@withContext Result(-1, "", "创建进程失败")
                 }
+            // stdout/stderr 必须并行读取，否则远程进程 stderr 填满管道缓冲区时双向阻塞
+            val stderrRef = java.util.concurrent.atomic.AtomicReference("")
+            val stderrThread = kotlin.concurrent.thread {
+                try {
+                    stderrRef.set(BufferedReader(
+                        InputStreamReader(ParcelFileDescriptor.AutoCloseInputStream(remoteProcess.errorStream))
+                    ).use { it.readText() })
+                } catch (_: Exception) {}
+            }
             val stdout = BufferedReader(
                 InputStreamReader(ParcelFileDescriptor.AutoCloseInputStream(remoteProcess.inputStream))
             ).use { it.readText() }
-            val stderr = BufferedReader(
-                InputStreamReader(ParcelFileDescriptor.AutoCloseInputStream(remoteProcess.errorStream))
-            ).use { it.readText() }
             val exit = withTimeoutOrNull(timeoutMs) { remoteProcess.waitFor() }
-                ?: run { remoteProcess.destroy(); -1 }
+            stderrThread.join(3000)
+            val stderr = stderrRef.get()
             LogCollector.d("Shell", "退出码=$exit, stdout=${stdout.take(200)}, stderr=${stderr.take(200)}")
-            Result(exit, stdout, stderr)
+            Result(exit ?: -1, stdout, stderr)
         } catch (t: Throwable) {
             LogCollector.e("Shell", "执行异常: ${t.message ?: t::class.java.simpleName}", t as? Exception)
             Result(-1, "", "执行异常: ${t.message ?: t::class.java.simpleName}")
@@ -88,3 +95,4 @@ object ShellExecutor {
         return last
     }
 }
+

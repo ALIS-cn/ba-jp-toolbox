@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.install
+﻿package com.bluearchive.toolbox.core.install
 
 import android.app.PendingIntent
 import android.content.Context

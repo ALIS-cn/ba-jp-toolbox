@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.shizuku
+﻿package com.bluearchive.toolbox.core.shizuku
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import rikka.shizuku.Shizuku
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Shizuku 客户端封装：
@@ -35,28 +36,26 @@ object ShizukuBridge {
     suspend fun requestPermission(): Boolean {
         if (isAuthorized()) return true
         if (!isRunning()) return false
-        return suspendCancellableCoroutine { cont ->
-            val listener = object : Shizuku.OnRequestPermissionResultListener {
-                override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
-                    if (requestCode == REQUEST_CODE) {
-                        Shizuku.removeRequestPermissionResultListener(this)
-                        if (cont.isActive) {
-                            cont.resume(grantResult == PackageManager.PERMISSION_GRANTED)
+        return withTimeoutOrNull(60_000L) {
+            suspendCancellableCoroutine { cont ->
+                val listener = object : Shizuku.OnRequestPermissionResultListener {
+                    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                        if (requestCode == REQUEST_CODE) {
+                            Shizuku.removeRequestPermissionResultListener(this)
+                            if (cont.isActive) {
+                                cont.resume(grantResult == PackageManager.PERMISSION_GRANTED)
+                            }
                         }
                     }
                 }
+                cont.invokeOnCancellation {
+                    Shizuku.removeRequestPermissionResultListener(listener)
+                }
+                Shizuku.addRequestPermissionResultListener(listener)
+                Shizuku.requestPermission(REQUEST_CODE)
             }
-            cont.invokeOnCancellation {
-                Shizuku.removeRequestPermissionResultListener(listener)
-            }
-            Shizuku.addRequestPermissionResultListener(listener)
-            if (Shizuku.shouldShowRequestPermissionRationale()) {
-                // 用户之前拒绝过：依然发起请求，由系统/Shizuku 展示说明
-            }
-            Shizuku.requestPermission(REQUEST_CODE)
-        }
+        } ?: false // 超时返回 false
     }
-
     /** 打开 Shizuku App；未安装返回 false */
     fun openShizukuApp(context: Context): Boolean =
         try {

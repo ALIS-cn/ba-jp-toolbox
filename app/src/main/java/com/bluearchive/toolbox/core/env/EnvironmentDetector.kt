@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.env
+﻿package com.bluearchive.toolbox.core.env
 
 import android.content.Context
 import android.content.pm.PackageManager

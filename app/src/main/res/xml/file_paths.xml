@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 仅暴露应用私有目录：缓存（Shizuku APK）与外部私有目录（客户端/SAI 安装包） -->
+    <!-- 不再使用 external-path="."，避免暴露整个外部存储 -->
+    <cache-path name="cache" path="." />
+    <external-files-path name="external_files" path="." />
+</paths>

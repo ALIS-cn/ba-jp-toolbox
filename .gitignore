@@ -1,0 +1,28 @@
+# ===== Gradle / Android 构建产物 =====
+.gradle/
+build/
+*/build/
+local.properties
+*.iml
+.idea/
+.cxx/
+.externalNativeBuild/
+captures/
+
+# ===== 编译产物（APK 走 GitHub Release 分发，不入库）=====
+*.apk
+*.apks
+*.aab
+*.keystore
+# 例外：assets 内置的安装包属于源码资源
+!app/src/main/assets/*.apk
+
+# ===== 系统/编辑器 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# ===== Kotlin/Java =====
+*.class
+hs_err_pid*

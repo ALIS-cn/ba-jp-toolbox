@@ -35,6 +35,20 @@ private data class ChangelogEntry(
 
 private val CHANGELOG = listOf(
     ChangelogEntry(
+        version = "0.8.8",
+        date = "2026-10-02",
+        items = listOf(
+            "修复：安装流程改为先迁移资源再卸载，避免卸载后资源丢失",
+            "修复：重复汉化不再覆盖原版备份，保护真正的原版文本",
+            "修复：部署失败时检查还原结果，还原失败会准确提示",
+            "修复：zip 解压加入文件数量/大小限制（防恶意压缩包）",
+            "修复：SHA-256 摘要缺失时拒绝安装，不再跳过校验",
+            "修复：SHA-256 格式严格校验（64 位十六进制）",
+            "修复：SAI 安装前也验证安装包包名，不再绕过供应链校验",
+            "修复：SAF 通道写入失败时不再静默跳过，正确报错",
+        ),
+    ),
+    ChangelogEntry(
         version = "0.8.7",
         date = "2026-10-02",
         items = listOf(

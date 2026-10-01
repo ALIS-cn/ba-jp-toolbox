@@ -132,7 +132,29 @@ class ClientInstallRepository(
             return Result(false, verify.message)
         }
 
-        // 3. 卸载原版（若存在且用户选择卸载）
+        // 3. 先迁移游戏资源（卸载会删除数据，必须先备份）
+        var migrateOk = false
+        if (options.migrateResources) {
+            val channel = gameFs.resolveChannel()
+            LogCollector.i("Install", "资源迁移通道=${channel?.javaClass?.simpleName}")
+            if (channel != null) {
+                onProgress(Progress(Step.Migrate, 0f, "迁移游戏资源（避免重下数 GB）…"))
+                val total = RESOURCE_DIRS.size
+                var migratedCount = 0
+                RESOURCE_DIRS.forEachIndexed { i, subDir ->
+                    onProgress(Progress(Step.Migrate, ((i + 1) * 100f / total), "迁移 $subDir…"))
+                    val r = channel.copyDir(PKG_OFFICIAL, PKG_CAFE, subDir)
+                    LogCollector.d("Install", "迁移 $subDir: $r")
+                    if (r.success) migratedCount++
+                }
+                migrateOk = migratedCount > 0
+                LogCollector.i("Install", "迁移结果: $migratedCount/$total 成功")
+            } else {
+                onProgress(Progress(Step.Migrate, 0f, "无可用通道，跳过资源迁移（首次启动游戏会自动下载）"))
+            }
+        }
+
+        // 4. 卸载原版（若存在且用户选择卸载）
         if (options.uninstallOfficial) {
             val installed = isPackageInstalled(PKG_OFFICIAL)
             LogCollector.i("Install", "官方客户端已安装=$installed")
@@ -152,7 +174,7 @@ class ClientInstallRepository(
             }
         }
 
-        // 4. 安装汉化客户端
+        // 5. 安装汉化客户端
         onProgress(Progress(Step.Install, 0f, "安装汉化客户端…"))
         val installer: ApkInstaller = if (shizukuOk) ShizukuInstaller() else SystemInstaller(context)
         LogCollector.i("Install", "使用安装器: ${installer.javaClass.simpleName}，APK 列表=${apkFiles.map { it.name }}")
@@ -171,29 +193,11 @@ class ClientInstallRepository(
             return Result(false, installResult.message)
         }
 
-        // 5. 迁移游戏资源
-        if (options.migrateResources) {
-            val channel = gameFs.resolveChannel()
-            LogCollector.i("Install", "资源迁移通道=${channel?.javaClass?.simpleName}")
-            if (channel != null) {
-                onProgress(Progress(Step.Migrate, 0f, "迁移游戏资源（避免重下数 GB）…"))
-                val total = RESOURCE_DIRS.size
-                RESOURCE_DIRS.forEachIndexed { i, subDir ->
-                    onProgress(Progress(Step.Migrate, ((i + 1) * 100f / total), "迁移 $subDir…"))
-                    val r = channel.copyDir(PKG_OFFICIAL, PKG_CAFE, subDir)
-                    LogCollector.d("Install", "迁移 $subDir: $r")
-                    // 源目录不存在等非致命错误不中断
-                }
-            } else {
-                onProgress(Progress(Step.Migrate, 0f, "无可用通道，跳过资源迁移（首次启动游戏会自动下载）"))
-            }
-        }
-
         // 清理
         extractDir.deleteRecursively()
         onProgress(Progress(Step.Done, 100f, "完成"))
         LogCollector.i("Install", "安装流程完成")
-        return Result(true, "汉化客户端安装成功${if (options.migrateResources) "，资源已迁移" else ""}，请启动游戏。")
+        return Result(true, "汉化客户端安装成功${if (options.migrateResources && migrateOk) "，资源已迁移" else ""}，请启动游戏。")
     }
 
     /** 用 SAI 安装 APKS（兜底）：分享原始 apks 文件给 SAI */
@@ -227,6 +231,21 @@ class ClientInstallRepository(
             }
             if (intent.resolveActivity(context.packageManager) == null) {
                 return@withContext Result(false, "未安装 SAI，请先点击下方「安装内置 SAI」按钮安装")
+            }
+            // 供应链校验：验证 APKS 中 base.apk 的包名
+            val tempDir = File(gameFs.stagingDir.parentFile, "sai_verify").apply { deleteRecursively(); mkdirs() }
+            try {
+                val apkFiles = extractApks(apksFile, tempDir) { }
+                val baseApk = apkFiles.firstOrNull { it.name == "base.apk" } ?: apkFiles.firstOrNull()
+                if (baseApk != null) {
+                    val verify = ApkVerifier.verify(context, baseApk, ApkVerifier.CAFE_PACKAGE)
+                    if (!verify.ok) {
+                        tempDir.deleteRecursively()
+                        return@withContext Result(false, "安装包校验失败：${verify.message}")
+                    }
+                }
+            } finally {
+                tempDir.deleteRecursively()
             }
             context.startActivity(intent)
             Result(true, "已打开 SAI，请在 SAI 中确认安装", pendingUserConfirmation = true)

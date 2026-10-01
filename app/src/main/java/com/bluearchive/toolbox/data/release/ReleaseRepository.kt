@@ -139,7 +139,8 @@ class ReleaseRepository(
         val asset = release.assets.firstOrNull { it.name == TABLE_BUNDLES_ASSET }
             ?: release.assets.firstOrNull { it.name.endsWith(".zip", ignoreCase = true) }
             ?: error("Release ${release.tagName} 中未找到 $TABLE_BUNDLES_ASSET")
-        val sha256 = asset.digest?.removePrefix("sha256:")?.takeIf { it.isNotBlank() }
+        val sha256 = asset.digest?.removePrefix("sha256:")
+            ?.takeIf { it.length == 64 && it.all { c -> c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F' } }
         return CafeResource(
             tag = release.tagName,
             assetName = asset.name,

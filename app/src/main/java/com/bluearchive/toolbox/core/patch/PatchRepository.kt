@@ -4,6 +4,7 @@ import com.bluearchive.toolbox.core.log.LogCollector
 import com.bluearchive.toolbox.data.release.CafeResource
 import com.bluearchive.toolbox.data.release.ReleaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream

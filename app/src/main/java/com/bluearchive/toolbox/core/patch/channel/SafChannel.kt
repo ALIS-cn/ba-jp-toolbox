@@ -1,4 +1,4 @@
-﻿package com.bluearchive.toolbox.core.patch.channel
+package com.bluearchive.toolbox.core.patch.channel
 
 import android.content.Context
 import android.net.Uri
@@ -30,8 +30,13 @@ class SafChannel(
         val filesDir = rootFilesDir() ?: return OpResult.fail("SAF 目录不可用，请重新授权")
         val tb = filesDir.findFile("TableBundles")
             ?: return OpResult.fail("未找到 TableBundles 目录，游戏可能未完整下载资源")
-        // 删除旧备份
-        filesDir.findFile("TableBundles.bak")?.delete()
+        // 已有备份：不覆盖，保护原版
+        if (filesDir.findFile("TableBundles.bak") != null) {
+            // 清空 TableBundles 目录准备接收新文件
+            tb.delete()
+            filesDir.createDirectory("TableBundles")
+            return OpResult.ok("已有原版备份，跳过重复备份")
+        }
         // 重命名 TableBundles → TableBundles.bak
         val renamed = tb.renameTo("TableBundles.bak")
         if (!renamed) return OpResult.fail("备份失败（重命名被拒绝）")
@@ -89,10 +94,11 @@ class SafChannel(
                 } else {
                     val existing = dstDir.findFile(child.name)
                     val doc = existing ?: dstDir.createFile("application/octet-stream", child.name)
-                    if (doc != null) {
-                        resolver.openOutputStream(doc.uri)?.use { out ->
-                            child.inputStream().use { input -> input.copyTo(out) }
-                        }
+                        ?: throw java.io.IOException("无法创建文件: ${child.name}")
+                    val out = resolver.openOutputStream(doc.uri)
+                        ?: throw java.io.IOException("无法打开输出流: ${child.name}")
+                    out.use { output ->
+                        child.inputStream().use { input -> input.copyTo(output) }
                     }
                 }
             }

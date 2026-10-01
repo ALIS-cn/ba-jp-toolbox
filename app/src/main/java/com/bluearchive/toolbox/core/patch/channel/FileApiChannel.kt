@@ -25,7 +25,13 @@ class FileApiChannel(
 
     override suspend fun backupTableBundles(): OpResult {
         if (!tableBundlesDir.exists()) return OpResult.fail("未找到 TableBundles 目录，游戏可能未完整下载资源")
-        if (backupDir.exists()) backupDir.deleteRecursively()
+        // 已有备份：不覆盖，保护原版（第一次汉化时创建的才是原版备份）
+        if (backupDir.exists()) {
+            // 只确保目标目录为空，准备接收新文件
+            tableBundlesDir.deleteRecursively()
+            tableBundlesDir.mkdirs()
+            return OpResult.ok("已有原版备份，跳过重复备份")
+        }
         val ok = tableBundlesDir.renameTo(backupDir)
         if (!ok) return OpResult.fail("备份失败，可能无存储写入权限")
         tableBundlesDir.mkdirs()

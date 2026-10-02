@@ -1,4 +1,4 @@
-﻿package com.bluearchive.toolbox.ui.nav
+package com.bluearchive.toolbox.ui.nav
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -29,6 +29,18 @@ fun ToolboxScaffold(
     startDestination: String = Routes.HOME,
 ) {
     val navController = rememberNavController()
+
+    // 从新手引导直接落到功能页时，该页是导航栈唯一项，popBackStack 无效，需改回首页
+    val rootBack: () -> Unit = {
+        if (navController.previousBackStackEntry == null) {
+            navController.navigate(Routes.HOME) {
+                popUpTo(0) { inclusive = true }
+            }
+        } else {
+            navController.popBackStack()
+        }
+    }
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.HOME) {
             HomeScreen(
@@ -66,14 +78,14 @@ fun ToolboxScaffold(
         composable(Routes.FILE_PATCH) {
             FilePatchScreen(
                 vm = vm,
-                onBack = { navController.popBackStack() },
+                onBack = rootBack,
                 onOpenEnv = { navController.navigate(Routes.ENV) },
             )
         }
         composable(Routes.CLIENT_INSTALL) {
             ClientInstallScreen(
                 vm = vm,
-                onBack = { navController.popBackStack() },
+                onBack = rootBack,
             )
         }
         composable(Routes.CHANGELOG) {

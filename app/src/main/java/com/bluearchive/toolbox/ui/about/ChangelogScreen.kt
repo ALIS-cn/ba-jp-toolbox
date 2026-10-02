@@ -35,6 +35,17 @@ private data class ChangelogEntry(
 
 private val CHANGELOG = listOf(
     ChangelogEntry(
+        version = "0.9.0",
+        date = "2026-10-03",
+        items = listOf(
+            "新增：全新新手引导，按「会用 Shizuku」和「不会」分两条路径",
+            "新手路径：Shizuku 科普 → 一键安装内置官方包 → 图文激活教程 → 授权，全程带着做",
+            "熟练路径：跳过科普，直接进入安装/启动/授权自检，缺什么补什么",
+            "引导完成后可直接选择「一键安装汉化客户端」或「替换游戏文件汉化」并跳转到对应功能",
+            "Shizuku 激活教程改为与引导页共用同一套内容，避免两处说明不一致",
+        ),
+    ),
+    ChangelogEntry(
         version = "0.8.9",
         date = "2026-10-03",
         items = listOf(

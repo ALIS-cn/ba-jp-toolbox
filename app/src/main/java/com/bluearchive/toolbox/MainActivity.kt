@@ -23,6 +23,7 @@ import com.bluearchive.toolbox.ui.disclaimer.DisclaimerScreen
 import com.bluearchive.toolbox.ui.nav.Routes
 import com.bluearchive.toolbox.ui.nav.ToolboxScaffold
 import com.bluearchive.toolbox.ui.onboarding.OnboardingScreen
+import com.bluearchive.toolbox.ui.onboarding.OnboardingTarget
 import com.bluearchive.toolbox.ui.theme.ToolboxTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,16 +50,13 @@ class MainActivity : ComponentActivity() {
                     // 已同意协议，但首次引导未完成
                     onboarding == null -> LoadingView()
                     onboarding == false -> OnboardingScreen(
-                        onKnowShizuku = {
-                            startRoute = Routes.HOME
-                            vm.completeOnboarding()
-                        },
-                        onNeedGuide = {
-                            startRoute = Routes.SHIZUKU_GUIDE
-                            vm.completeOnboarding()
-                        },
-                        onSkip = {
-                            startRoute = Routes.HOME
+                        vm = vm,
+                        onEnterApp = { target ->
+                            startRoute = when (target) {
+                                OnboardingTarget.HOME -> Routes.HOME
+                                OnboardingTarget.CLIENT_INSTALL -> Routes.CLIENT_INSTALL
+                                OnboardingTarget.FILE_PATCH -> Routes.FILE_PATCH
+                            }
                             vm.completeOnboarding()
                         },
                     )

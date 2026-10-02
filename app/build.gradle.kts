@@ -13,8 +13,8 @@ android {
         applicationId = "com.bluearchive.toolbox"
         minSdk = 26
         targetSdk = 35
-        versionCode = 30
-        versionName = "0.9.0"
+        versionCode = 31
+        versionName = "0.9.1"
         vectorDrawables { useSupportLibrary = true }
     }
 
@@ -76,6 +76,7 @@ dependencies {
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
 }
+
 
 
 

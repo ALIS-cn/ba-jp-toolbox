@@ -120,7 +120,6 @@ fun OnboardingScreen(
                     Stage.SETUP -> Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 20.dp),
                     ) {
                         Spacer(Modifier.height(8.dp))
@@ -134,7 +133,6 @@ fun OnboardingScreen(
                     Stage.CHOOSE -> Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 20.dp),
                     ) {
                         Spacer(Modifier.height(8.dp))

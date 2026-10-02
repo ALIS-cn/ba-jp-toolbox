@@ -35,6 +35,13 @@ private data class ChangelogEntry(
 
 private val CHANGELOG = listOf(
     ChangelogEntry(
+        version = "0.9.1",
+        date = "2026-10-03",
+        items = listOf(
+            "修复：点击「我会使用 Shizuku」或「明白了，开始设置」后闪退的问题（页面存在嵌套滚动容器导致布局崩溃）",
+        ),
+    ),
+    ChangelogEntry(
         version = "0.9.0",
         date = "2026-10-03",
         items = listOf(

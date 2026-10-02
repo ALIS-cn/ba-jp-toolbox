@@ -68,10 +68,18 @@ object ShellExecutor {
                 InputStreamReader(ParcelFileDescriptor.AutoCloseInputStream(remoteProcess.inputStream))
             ).use { it.readText() }
             val exit = withTimeoutOrNull(timeoutMs) { remoteProcess.waitFor() }
+            if (exit == null) {
+                // 超时必须杀掉远程进程：否则后台残留的 cp 会与后续 rm/mv 回滚命令产生竞态，
+                // 导致游戏目录处于半写入状态（玩家看到"要求重新下载资源"）
+                LogCollector.e("Shell", "命令超时 ${timeoutMs}ms，销毁远程进程: ${args.joinToString(" ")}")
+                runCatching { remoteProcess.destroy() }
+                stderrThread.join(2000)
+                return@withContext Result(-1, "", "命令超时（${timeoutMs / 1000} 秒），已终止")
+            }
             stderrThread.join(3000)
             val stderr = stderrRef.get()
             LogCollector.d("Shell", "退出码=$exit, stdout=${stdout.take(200)}, stderr=${stderr.take(200)}")
-            Result(exit ?: -1, stdout, stderr)
+            Result(exit, stdout, stderr)
         } catch (t: Throwable) {
             LogCollector.e("Shell", "执行异常: ${t.message ?: t::class.java.simpleName}", t as? Exception)
             Result(-1, "", "执行异常: ${t.message ?: t::class.java.simpleName}")

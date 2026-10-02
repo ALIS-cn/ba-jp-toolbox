@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch.channel
+﻿package com.bluearchive.toolbox.core.patch.channel
 
 import android.content.Context
 import android.net.Uri
@@ -77,6 +77,22 @@ class SafChannel(
         return filesDir.findFile("TableBundles.bak") != null
     }
 
+    override suspend fun fileMd5(relativePath: String): String? {
+        val doc = resolveGameFile(relativePath) ?: return null
+        return try {
+            val md = java.security.MessageDigest.getInstance("MD5")
+            resolver.openInputStream(doc.uri)?.use { input ->
+                val buf = ByteArray(64 * 1024)
+                var read: Int
+                while (input.read(buf).also { read = it } != -1) md.update(buf, 0, read)
+            } ?: return null
+            md.digest().joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) { null }
+    }
+
+    override suspend fun fileSize(relativePath: String): Long =
+        resolveGameFile(relativePath)?.length() ?: -1L
+
     override fun cleanupStaging() {
         stagingDir.deleteRecursively()
         stagingDir.mkdirs()
@@ -84,6 +100,16 @@ class SafChannel(
 
     private fun rootFilesDir(): DocumentFile? =
         DocumentFile.fromTreeUri(context, treeUri)
+
+    /** 按相对路径逐级查找游戏 files 目录下的文件 */
+    private fun resolveGameFile(relativePath: String): DocumentFile? {
+        var node = rootFilesDir() ?: return null
+        for (part in relativePath.split("/")) {
+            if (part.isEmpty()) continue
+            node = node.findFile(part) ?: return null
+        }
+        return node.takeIf { it.isFile }
+    }
 
     private fun copyRecursive(src: File, dstDir: DocumentFile) {
         if (src.isDirectory) {

@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch.channel
+﻿package com.bluearchive.toolbox.core.patch.channel
 
 import java.io.File
 
@@ -48,6 +48,15 @@ interface FileSystemChannel {
     suspend fun copyDir(srcPkg: String, dstPkg: String, subDir: String): OpResult
 
     suspend fun hasBackup(): Boolean
+
+    /**
+     * 读取游戏 files 目录下某文件的 MD5（相对 files 的路径，如 TableBundles/Catalog/TableCatalog.bytes）。
+     * 文件不存在或无法读取时返回 null。用于部署前版本匹配预检。
+     */
+    suspend fun fileMd5(relativePath: String): String?
+
+    /** 游戏 files 目录下某文件的字节数；不存在返回 -1。用于部署后完整性校验。 */
+    suspend fun fileSize(relativePath: String): Long
 
     fun cleanupStaging()
 }

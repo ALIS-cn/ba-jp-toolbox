@@ -39,9 +39,14 @@ class ToolboxViewModel(app: Application) : AndroidViewModel(app) {
     private val _agreementVersion = MutableStateFlow<Int?>(null)
     val agreementVersion: StateFlow<Int?> = _agreementVersion.asStateFlow()
 
+    /** null=尚未加载；false=首次使用未完成引导；true=已完成 */
+    private val _onboardingDone = MutableStateFlow<Boolean?>(null)
+    val onboardingDone: StateFlow<Boolean?> = _onboardingDone.asStateFlow()
+
     init {
         viewModelScope.launch {
             _agreementVersion.value = prefs.disclaimerAcceptedVersion()
+            _onboardingDone.value = prefs.onboardingCompleted()
         }
     }
 
@@ -49,6 +54,13 @@ class ToolboxViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             prefs.setDisclaimerAccepted(AppPreferences.DISCLAIMER_VERSION)
             _agreementVersion.value = AppPreferences.DISCLAIMER_VERSION
+        }
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            prefs.setOnboardingCompleted()
+            _onboardingDone.value = true
         }
     }
 

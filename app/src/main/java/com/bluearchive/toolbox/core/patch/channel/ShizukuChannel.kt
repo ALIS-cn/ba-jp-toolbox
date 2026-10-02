@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch.channel
+﻿package com.bluearchive.toolbox.core.patch.channel
 
 import com.bluearchive.toolbox.core.env.EnvironmentDetector
 import com.bluearchive.toolbox.core.shizuku.ShellExecutor
@@ -55,12 +55,28 @@ class ShizukuChannel(
     override suspend fun deployFromStaging(stagingTableBundles: File): OpResult {
         // 注意：不要在 /storage/emulated/0/Android/data/ 上执行 chmod，
         // sdcardfs 不支持修改权限，且会破坏目录执行位导致后续 rm 失败。
-        val r = shell.execChain(
-            listOf("mkdir", "-p", tableBundlesDir),
+        // cp 复制 200MB+ 跨 FUSE 挂载可能耗时数分钟，给 10 分钟超时
+        val mkdir = shell.exec(listOf("mkdir", "-p", tableBundlesDir))
+        if (mkdir.exitCode != 0) return OpResult.fail(mkdir.stderr.ifBlank { "创建目录失败" })
+        val cp = shell.exec(
             listOf("cp", "-r", "${stagingTableBundles.absolutePath}/.", "$tableBundlesDir/"),
+            timeoutMs = 600_000L,
         )
-        return if (r.exitCode == 0) OpResult.ok()
-        else OpResult.fail(r.stderr.ifBlank { "写入失败" })
+        return if (cp.exitCode == 0) OpResult.ok()
+        else OpResult.fail(cp.stderr.ifBlank { "写入失败（退出码 ${cp.exitCode}）" })
+    }
+
+    override suspend fun fileMd5(relativePath: String): String? {
+        val r = shell.exec("md5sum", "$gameFiles/$relativePath")
+        if (r.exitCode != 0) return null
+        // 输出格式：<32位hex>  文件名
+        return r.stdout.trim().takeIf { it.length >= 32 }?.substring(0, 32)
+    }
+
+    override suspend fun fileSize(relativePath: String): Long {
+        val r = shell.exec("stat", "-c", "%s", "$gameFiles/$relativePath")
+        if (r.exitCode != 0) return -1L
+        return r.stdout.trim().toLongOrNull() ?: -1L
     }
 
     override suspend fun restoreFromBackup(): OpResult {

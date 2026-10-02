@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.ui.nav
+﻿package com.bluearchive.toolbox.ui.nav
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -24,9 +24,12 @@ object Routes {
 }
 
 @Composable
-fun ToolboxScaffold(vm: ToolboxViewModel) {
+fun ToolboxScaffold(
+    vm: ToolboxViewModel,
+    startDestination: String = Routes.HOME,
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.HOME) {
             HomeScreen(
                 vm = vm,
@@ -48,7 +51,16 @@ fun ToolboxScaffold(vm: ToolboxViewModel) {
         composable(Routes.SHIZUKU_GUIDE) {
             ShizukuGuideScreen(
                 vm = vm,
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    if (startDestination == Routes.SHIZUKU_GUIDE) {
+                        // 从新手引导进入：看完引导回到主页，而不是退出应用
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.SHIZUKU_GUIDE) { inclusive = true }
+                        }
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
             )
         }
         composable(Routes.FILE_PATCH) {

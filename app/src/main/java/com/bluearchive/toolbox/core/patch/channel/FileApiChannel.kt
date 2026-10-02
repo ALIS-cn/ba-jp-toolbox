@@ -1,4 +1,4 @@
-package com.bluearchive.toolbox.core.patch.channel
+﻿package com.bluearchive.toolbox.core.patch.channel
 
 import com.bluearchive.toolbox.core.env.EnvironmentDetector
 import java.io.File
@@ -72,6 +72,25 @@ class FileApiChannel(
     }
 
     override suspend fun hasBackup(): Boolean = backupDir.exists()
+
+    override suspend fun fileMd5(relativePath: String): String? {
+        val f = File(gameFiles, relativePath)
+        if (!f.isFile) return null
+        return try {
+            val md = java.security.MessageDigest.getInstance("MD5")
+            f.inputStream().use { input ->
+                val buf = ByteArray(64 * 1024)
+                var read: Int
+                while (input.read(buf).also { read = it } != -1) md.update(buf, 0, read)
+            }
+            md.digest().joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) { null }
+    }
+
+    override suspend fun fileSize(relativePath: String): Long {
+        val f = File(gameFiles, relativePath)
+        return if (f.isFile) f.length() else -1L
+    }
 
     override fun cleanupStaging() {
         stagingDir.deleteRecursively()

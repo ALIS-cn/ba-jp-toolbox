@@ -35,6 +35,24 @@ private data class ChangelogEntry(
 
 private val CHANGELOG = listOf(
     ChangelogEntry(
+        version = "0.8.9",
+        date = "2026-10-03",
+        items = listOf(
+            "修复：汉化后游戏重新下载日文资源的问题——新增版本匹配预检，汉化包与游戏版本不一致时直接拦截",
+            "修复：部署后逐文件校验大小，文件缺失或写入不完整会自动还原并明确报错，不再假报成功",
+            "修复：复制 200MB+ 大文件超时由 30 秒延长到 10 分钟，超时自动终止进程避免目录半写入",
+            "修复：解压限制放宽（单文件 512MB / 总量 2GB），兼容咖啡厅当前 203MB 资源文件",
+            "修复：SHA-256 摘要缺失时拒绝安装；部署失败的回滚结果如实反馈",
+        ),
+    ),
+    ChangelogEntry(
+        version = "0.9.0",
+        date = "2026-10-02",
+        items = listOf(
+            "新增：首次使用新手引导，同意协议后可选择「我会使用 Shizuku」直接进入，或「我不会，带我开启引导」查看激活教程",
+        ),
+    ),
+    ChangelogEntry(
         version = "0.8.8",
         date = "2026-10-02",
         items = listOf(
